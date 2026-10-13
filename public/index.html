@@ -93,6 +93,17 @@
   .conn-status.bad .dot{ background:var(--rust); }
   .report-meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .report-meta .full{ grid-column:1 / -1; }
+  .report-meta.auto{ grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+  .sub-h{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--concrete-2); }
+  .sub-h:first-of-type{ margin-top:14px; }
+  .sub-h span{ font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:11px; margin-left:4px; }
+  .ex-note{ font-size:11px; color:var(--muted); background:var(--concrete); padding:8px; border-radius:var(--radius); }
+  details.stamm > summary{ cursor:pointer; list-style:none; display:flex; flex-direction:column; gap:3px; }
+  details.stamm > summary::-webkit-details-marker{ display:none; }
+  details.stamm .stamm-title{ font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--charcoal); }
+  details.stamm .stamm-title::before{ content:'▸'; display:inline-block; margin-right:8px; transition:transform .15s; }
+  details.stamm[open] .stamm-title::before{ transform:rotate(90deg); }
+  details.stamm .stamm-sub{ font-size:12px; color:var(--muted); padding-left:18px; }
   .logo-upload{ display:flex; align-items:center; gap:10px; margin-top:8px; }
   .logo-upload img{ height:34px; }
   .actionbar{ display:flex; gap:10px; margin-bottom:14px; }
@@ -206,6 +217,8 @@
     color:#7A7A7A; text-decoration:none; /* KEINE Unterstreichung */
     padding-right:15px;
   }
+  /* QS-Bericht: Werte (Thema, Verfasser, Kunde, Verteilung ...) bündig mit Spalte "Firma" des Verteilers (Spalte 1 = 116px) */
+  table.meta-table.meta-qs td.k{ width:116px; min-width:116px; box-sizing:border-box; padding-right:0; }
   table.meta-table tr.gap td{ padding-top:11.3px; }   /* 3mm Gruppenabstand */
 
   .rp-subhead{                            /* "VERTEILER", "INHALTSVERZEICHNIS" */
@@ -439,19 +452,14 @@
     </div>
 
     <div class="card no-print">
-      <h2>Berichtskopf</h2>
-      <div class="report-meta">
-        <div class="full"><label>Projekt / Baustelle</label><input type="text" id="rProjekt" placeholder="z. B. XY | München"></div>
-        <div><label>Baustellenbezeichnung</label><input type="text" id="rBaustelle" placeholder="z. B. Baustelle XY"></div>
-        <div><label>Kunde</label><input type="text" id="rKunde" placeholder="Kundenname"></div>
-        <div><label>Kunde – Straße Hausnr.</label><input type="text" id="rKundeStrasse" placeholder="z. B. Heroldsberger Weg 8"></div>
-        <div><label>Kunde – PLZ Ort</label><input type="text" id="rKundePlz" placeholder="z. B. 90411 Nürnberg"></div>
-        <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
+      <h2>Dieser Bericht</h2>
+      <div class="report-meta auto">
         <div><label>Datum Bericht</label><input type="text" id="rDatum" placeholder="TT.MM.JJJJ"></div>
         <div id="berichtsNrField">
           <label>Berichts-Nr. <button type="button" class="wetter-btn" onclick="startNewReportInReihe()" title="Aktuelle Feststellungen als Kurzdarstellung ablegen und Berichts-Nr. erhöhen">➜ neuer Bericht</button></label>
           <input type="number" id="rBerichtsNr" placeholder="z. B. 1" min="1">
         </div>
+        <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
         <div><label>Temperatur Min.</label><input type="text" id="rTempMin" placeholder="z. B. 16,0°C"></div>
         <div><label>Temperatur Max.</label><input type="text" id="rTempMax" placeholder="z. B. 22,0°C"></div>
         <input type="text" id="rDateiname" style="display:none" aria-hidden="true">
@@ -465,30 +473,42 @@
         <textarea id="rTeilnehmer" rows="4" placeholder="Herr Forster, IMP&#10;Herr Lingenfelser, GAPP"></textarea>
       </div>
 
-      <div id="rahmenVerteilerBlock">
-      <details class="help" style="margin-top:14px" open>
-        <summary>Rahmentermine festlegen (einmalig pro Projekt)</summary>
-        <div class="ex" style="font-family:inherit;white-space:normal">Hier einmal zu Projektbeginn Bereich, Gewerk und die Ausführung nach TP (von/bis) je Zeile anlegen. Bei jedem weiteren Bericht müssen dann nur noch Bautenstand, Prozent, Pünktlichkeit und ggf. Prognose unten aktualisiert werden — die Liste selbst bleibt gleich.</div>
-        <label style="margin-top:12px">Hinweistext über der Tabelle <span style="font-weight:400;color:var(--muted)">(projektspezifisch, erscheint im Bericht — z. B. auf welchen Terminplan sich „TP vom" bezieht)</span></label>
-        <input type="text" id="rRahmenHinweis" placeholder="z. B. Hinweis: TP vom 14.04.2026 ist der optimierte Detailterminplan (Best-Case-Szenario)">
-        <div id="rahmenSetupEditor" style="margin-top:10px"></div>
-        <button type="button" class="btn-secondary small" style="margin-top:8px" onclick="addRahmenRow()">+ Zeile hinzufügen</button>
-      </details>
-
-      <label style="margin-top:18px">Bautenstand &amp; Pünktlichkeit <span style="font-weight:400;color:var(--muted)">(bei jedem Bericht aktualisieren)</span></label>
-      <div id="rahmenStatusEditor"></div>
-
-      <details class="help" style="margin-top:14px">
-        <summary>Verteilerliste</summary>
-        <div id="verteilerEditor" style="margin-top:10px"></div>
-        <button type="button" class="btn-secondary small" style="margin-top:8px" onclick="addVerteilerRow()">+ Empfänger hinzufügen</button>
-      </details>
+      <div class="qs-only" style="margin-top:18px">
+        <h3 class="sub-h">Bautenstand &amp; Pünktlichkeit <span>(bei jedem Bericht aktualisieren)</span></h3>
+        <div id="rahmenStatusEditor"></div>
       </div>
+    </div>
 
-      <details class="help" style="margin-top:14px" open>
-        <summary>Vorherige Berichte</summary>
-        <div class="ex" style="font-family:inherit;white-space:normal">Formulierung und Zusammenfassung sind bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe.</div>
-      <div id="verlaufList" style="margin-top:10px"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
+    <div class="card no-print">
+      <details class="stamm" id="stammDetails">
+        <summary><span class="stamm-title">Projekt &amp; Stammdaten</span><span class="stamm-sub" id="stammSummary">ändert sich selten — zum Bearbeiten aufklappen</span></summary>
+
+        <h3 class="sub-h">Projekt &amp; Kunde</h3>
+        <div class="report-meta">
+          <div class="full"><label>Projekt / Baustelle</label><input type="text" id="rProjekt" placeholder="z. B. XY | München"></div>
+          <div><label>Baustellenbezeichnung</label><input type="text" id="rBaustelle" placeholder="z. B. Baustelle XY"></div>
+          <div><label>Kunde</label><input type="text" id="rKunde" placeholder="Kundenname"></div>
+          <div><label>Kunde – Straße Hausnr.</label><input type="text" id="rKundeStrasse" placeholder="z. B. Heroldsberger Weg 8"></div>
+          <div><label>Kunde – PLZ Ort</label><input type="text" id="rKundePlz" placeholder="z. B. 90411 Nürnberg"></div>
+        </div>
+
+        <div class="qs-only" id="rahmenVerteilerBlock">
+          <h3 class="sub-h">Rahmentermine <span>(einmalig pro Projekt)</span></h3>
+          <div class="ex-note">Bereich, Gewerk und Ausführung nach TP (von/bis) je Zeile anlegen. Bei jedem weiteren Bericht müssen nur noch Bautenstand, Prozent, Pünktlichkeit und ggf. Prognose aktualisiert werden (siehe oben).</div>
+          <label style="margin-top:12px">Hinweistext über der Tabelle <span style="font-weight:400;color:var(--muted)">(erscheint im Bericht — z. B. auf welchen Terminplan sich „TP vom" bezieht)</span></label>
+          <input type="text" id="rRahmenHinweis" placeholder="z. B. Hinweis: TP vom 14.04.2026 ist der optimierte Detailterminplan (Best-Case-Szenario)">
+          <div id="rahmenSetupEditor" style="margin-top:10px"></div>
+          <button type="button" class="btn-secondary small" style="margin-top:8px" onclick="addRahmenRow()">+ Zeile hinzufügen</button>
+
+          <h3 class="sub-h">Verteilerliste</h3>
+          <div id="verteilerEditor"></div>
+          <button type="button" class="btn-secondary small" style="margin-top:8px" onclick="addVerteilerRow()">+ Empfänger hinzufügen</button>
+        </div>
+
+        <div class="qs-only">
+          <h3 class="sub-h">Vorherige Berichte <span>(Formulierung und Zusammenfassung bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe)</span></h3>
+          <div id="verlaufList"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
+        </div>
       </details>
     </div>
 
@@ -562,8 +582,7 @@ function setBerichtsModus(modus){
   if(hint) hint.textContent = berichtsModus === 'kurz'
     ? 'Kurzbericht: nur Deckblatt und Dokumentation. Statt Verteiler werden Teilnehmer der Begehung erfasst. Rahmentermine bleiben gespeichert, werden aber nicht abgefragt und nicht ausgegeben.'
     : 'Vollständiger QS-Bericht mit Verteiler, Rahmenterminen, Verlauf und Inhaltsverzeichnis.';
-  const rahmenVerteilerBlock = document.getElementById('rahmenVerteilerBlock');
-  if(rahmenVerteilerBlock) rahmenVerteilerBlock.style.display = berichtsModus === 'kurz' ? 'none' : '';
+  document.querySelectorAll('.qs-only').forEach(el => { el.style.display = berichtsModus === 'kurz' ? 'none' : ''; });
   const teilnehmerBlock = document.getElementById('teilnehmerBlock');
   if(teilnehmerBlock) teilnehmerBlock.style.display = berichtsModus === 'kurz' ? '' : 'none';
   // Kurzbericht ist kein durchnummerierter Bericht in einer Reihe, sondern
@@ -1716,7 +1735,20 @@ function isoWeekLabel(dateStr){
   return d.getUTCFullYear() + '-W' + String(week).padStart(2,'0');
 }
 
+function updateStammSummary(){
+  const el = document.getElementById('stammSummary');
+  if(!el) return;
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const parts = [v('rProjekt'), v('rBaustelle'), v('rKunde')].map(x => x.trim()).filter(Boolean);
+  el.textContent = parts.length ? parts.join(' · ') : 'ändert sich selten — zum Bearbeiten aufklappen';
+}
+['rProjekt','rBaustelle','rKunde'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', updateStammSummary);
+});
+
 function refreshReportViews(){
+  updateStammSummary();
   renderEditor();
   renderReport();
   renderVerteilerEditor();
@@ -2092,7 +2124,7 @@ function renderReport(){
 
   const coverBody = `
     <div class="cover-title">${kurz ? 'Kurzbericht-Baustellenbegehung' : 'Leistungsfeststellung – Qualitätssicherung'}</div>
-    <table class="meta-table">
+    <table class="meta-table${kurz ? '' : ' meta-qs'}">
       <tr><td class="k">Thema</td><td>${kurz ? kurzThema : 'Bericht zur Leistungsfeststellung – Qualitätssicherung'}</td></tr>
       <tr class="gap"><td class="k">Verfasser</td><td>${escapeHtml(verfasser)}</td></tr>
       <tr><td class="k">Datum</td><td>${escapeHtml(datum)}</td></tr>
@@ -2106,7 +2138,7 @@ function renderReport(){
       <tr><th>Name</th><th>Firma</th><th>Kürzel</th><th>E-Mail</th></tr>
       ${verteilerRows.map(r => { const [name='',firma='',kuerzel='',email=''] = r; return `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(firma)}</td><td>${escapeHtml(kuerzel)}</td><td>${escapeHtml(email)}</td></tr>`; }).join('')}
     </table>
-    <table class="meta-table" style="margin-top:11.3px">
+    <table class="meta-table meta-qs" style="margin-top:11.3px">
       <tr><td class="k">Verteilung</td><td>per Email</td></tr>
       <tr><td class="k">Anlagen</td><td>./.</td></tr>
     </table>`}
