@@ -400,7 +400,7 @@
 <header class="top">
   <div style="min-width:0">
     <div class="proj" id="headerProj">XY | München</div>
-    <div class="sub" id="headerSub">QS-Bautenstand</div>
+    <div class="sub" id="headerSub">QS-Bericht</div>
   </div>
   <img class="app-logo" id="headerLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABFCAMAAAArU9sbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAGnUExURf////7+/tvb25mZmZGRkY+Pj5ycnOjo6KysrJCQkMvLy/39/ZeXl0REREVFRTk5OcXFxcDAwFFRUUFBQWFhYczMzI6OjkZGRjs7O7u7u8HBwVJSUkJCQmBgYEdHR0lJSUhISF9fX4mJiYyMjIqKiouLi1xcXI2NjXV1dYODgz8/P/n5+cLCwjw8PPj4+IGBgT4+Pjo6OvX19b+/v/v7+4WFhUpKSr29va+vr9XV1e/v79zc3N7e3vPz80NDQ9bW1qmpqZ6enjMzMzIyMra2tqKiorq6uqGhoaioqFNTU05OTvz8/Kenp62trWdnZ66uroKCgoSEhIeHh/f39/b29vDw8H5+fmhoaJ+fnz09Pbm5ucrKypaWljQ0NMfHx0tLS/T09Ly8vDc3N2NjY9PT09HR0eTk5Onp6dnZ2YiIiLCwsPHx8e7u7uzs7MjIyICAgN/f339/f3t7e6SkpJKSksPDw8/Pz7e3t0BAQGpqaqqqqqWlpfLy8ri4uPr6+mVlZZubm5iYmJWVlX19fU1NTV5eXllZWdjY2Orq6uHh4ZqampOTk76+vrsXhk4AAAAJcEhZcwAAFxEAABcRAcom8z8AAANnSURBVFhH3ZjpV1JBFMDvCzD1BWoYICIPASMhFU1xKyst06i0tAVbUCvN1GxfbLOibPujOzODvJnLvIX0Q6efXzhzr78zc99s7wGAYgZQcKsAzdjncBriqtpPJdU4oFPjrFUA1ANujzF19cTScNAkx9t4CED1efzGBJpIh4PNJjmhltq9tYS1csLIguOapkUES7jVFY3Fi39tlFj8sFuweOIJTM2REG/R2tgT5VHak4IllMIZAEc7rCydXWm/v5uz9OAMgGOiJYrjAL19oUwm2b9by0BfPN4+SH7atGRiOC5g0yLrC4ddi6S6HHYtdvoiedJB0RLfaVeGho9zDJ+gycQycpIPME6l5dVNnR5Nc4yd0VdAkg8wvGH5iFJnO/ilFhivYDXq1d2VRe/LuW53EfKfvGWnnYM0y6qbmtCaKZPNGY9oYe08k+fJs5NUNzt4oZpyceJSSLC4iwGOqahXPiKOPrIz6JaQihMA6gPyEemkppHlr+auejldqeXKTA9i9uq1SvsSuX6jCuNoFKtrbfGP5MpIu8X5YsNihG1LzNQyRywNppbWmwDqrQAei07H7SCx3MkHcrm6eewAWBjL5Rbv3gOA+z6XAT5fLLZEkpcdvoQrKtmlHqzEfPGHq7hZQAF9uqqQFWJFlCzp6//J6pqEIcraPBt2Dw5zrNOqP5rekNBF2dh4TFKWfE9wXOfps3UA9XkO7+wco/S0f5E3yalreQmgJkzn7ivysOncNYLNXbvryAh+TaeTZdA1vUDqwiyvcUISnWqRN1ObiGq2e9PVyHbvtzhlc2BF2L0zbUoWoXZOkx1Tt4Te4ZQs9FvePLJ0331PqsssszgDoMHyLvWBngEV3Q4lJwmz6NW1YZGcJOw8mtNHZGmRjai3HVXX0iIbUbEvlVgkfWHndBP5xSySXU08p8MftxyYT40jQnXdn3GGY+uL8Dbh1wrlkNcWbr74cbxQKOTRWxZ+j/N4aDNXF1mKeJcyhLcYYNEXwuJ4qS5GKd6vpf0lks/ICH/b1i04yNDCNe92nnTXdynL670ly8gPHGUsk+u54azjYPNlBjdzGK4jDsO5W8JwHXHYtOxNX/4pi2Tf5bBr2XVfyPeXyApuFgiS7y9eM4uy/dP1y/kbNwsoU06XKyG513HoH5cMsUr5Ax5gj6pG+yeiAAAAAElFTkSuQmCC" alt="Logo">
 </header>
@@ -416,7 +416,7 @@
       <h2>Berichtsart</h2>
       <div class="type-toggle">
         <button type="button" class="on" data-modus="qs" onclick="setBerichtsModus('qs')">QS-Bericht</button>
-        <button type="button" data-modus="kurz" onclick="setBerichtsModus('kurz')">Baustellen-Kurzbericht</button>
+        <button type="button" data-modus="kurz" onclick="setBerichtsModus('kurz')">Kurzbericht</button>
       </div>
       <div class="hint" id="modusHint">Vollständiger QS-Bericht mit Verteiler, Rahmenterminen, Verlauf und Inhaltsverzeichnis.</div>
     </div>
@@ -579,7 +579,7 @@ function setBerichtsModus(modus){
     b.classList.toggle('on', b.dataset.modus === berichtsModus);
   });
   const headerSub = document.getElementById('headerSub');
-  if(headerSub) headerSub.textContent = berichtsModus === 'kurz' ? 'Kurzbericht Baustellenbegehung' : 'QS-Bautenstand';
+  if(headerSub) headerSub.textContent = berichtsModus === 'kurz' ? 'Kurzbericht' : 'QS-Bericht';
   const hint = document.getElementById('modusHint');
   if(hint) hint.textContent = berichtsModus === 'kurz'
     ? 'Kurzbericht: nur Deckblatt und Dokumentation. Statt Verteiler werden Teilnehmer der Begehung erfasst. Rahmentermine bleiben gespeichert, werden aber nicht abgefragt und nicht ausgegeben.'
