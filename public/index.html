@@ -485,8 +485,11 @@
       </details>
       </div>
 
-      <label>Vorherige Berichte <span style="font-weight:400;color:var(--muted)">(Formulierung und Zusammenfassung sind bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe)</span></label>
-      <div id="verlaufList"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
+      <details class="help" style="margin-top:14px" open>
+        <summary>Vorherige Berichte</summary>
+        <div class="ex" style="font-family:inherit;white-space:normal">Formulierung und Zusammenfassung sind bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe.</div>
+      <div id="verlaufList" style="margin-top:10px"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
+      </details>
     </div>
 
     <div class="card no-print">
@@ -2019,7 +2022,7 @@ function renderReport(){
     // Rahmentermine-Seite, nicht auf die Dokumentationsseite.
     if(verlaufEntries.length){
       rahmenBody += `<h3 class="section">Vorherige Berichte</h3>
-        <table class="doku-index"><colgroup><col style="width:56px"><col style="width:200px"><col></colgroup><tr><th>Nr.</th><th>Bericht</th><th>Zusammenfassung</th></tr>`;
+        <table class="doku-index"><colgroup><col style="width:68px"><col style="width:168px"><col></colgroup><tr><th>Nr.</th><th>Bericht</th><th>Zusammenfassung</th></tr>`;
       verlaufEntries.forEach(v => {
         const range = (v.von === v.bis) ? String(v.von) : `${v.von}–${v.bis}`;
         rahmenBody += `<tr><td>${escapeHtml(range)}</td><td>${escapeHtml(verlaufBerichtText(v))}</td><td>${escapeHtml(v.zusammenfassung||'')}</td></tr>`;
