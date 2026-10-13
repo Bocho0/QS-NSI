@@ -33,7 +33,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{ background:var(--concrete); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding-bottom:76px; }
+  body{ background:var(--concrete); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding-bottom:24px; }
   h1,h2,h3,.display{ font-family:'Archivo',system-ui,sans-serif; font-weight:800; letter-spacing:-0.01em; margin:0; }
   header.top{ background:var(--charcoal); color:var(--white); padding:14px 16px; position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; gap:12px; }
   header.top .proj{ font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); font-weight:700; margin-bottom:2px; }
@@ -93,7 +93,10 @@
   .conn-status.bad .dot{ background:var(--rust); }
   .report-meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .report-meta .full{ grid-column:1 / -1; }
-  .report-meta.auto{ grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+  .report-meta.auto{ grid-template-columns:repeat(3,1fr); align-items:end; }
+  @media (max-width:520px){ .report-meta.auto{ grid-template-columns:1fr 1fr; } }
+  .report-meta.auto .wetter-btn{ white-space:nowrap; }
+  .report-meta.auto label{ display:flex; align-items:center; gap:8px; min-height:24px; margin-bottom:0; }
   .sub-h{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--concrete-2); }
   .sub-h:first-of-type{ margin-top:14px; }
   .sub-h span{ font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); font-size:11px; margin-left:4px; }
@@ -395,52 +398,8 @@
 
   <div class="conn-status no-print" id="connStatus"></div>
 
-  <!-- ===================== ERFASSEN ===================== -->
-  <section id="view-capture" class="view active">
-
-    <div class="card no-print">
-      <h2>Baustellenbesichtigung fortsetzen</h2>
-      <div class="hint">Fotos werden direkt in deine Fotogalerie gespeichert (Button "Galerie" bei jedem Eintrag). Die Textangaben bleiben in dieser Sitzung erhalten. Für einen Monatsbericht mit mehreren Besichtigungen: am Ende jeder Besichtigung unten im Bericht-Tab "1. Berichtsdaten herunterladen" — die Datei beim nächsten Termin hier wieder laden, dann geht es mit denselben Einträgen weiter.</div>
-      <label style="margin-top:14px">Vorherige Sitzung laden (fortsetzen)</label>
-      <input type="file" accept=".json" id="continueImportInput" onchange="importContinueFile(event)">
-
-      <button type="button" class="btn-secondary" style="margin-top:14px" onclick="exportSessionJson()">Baustellenbesuch beenden — Fotos als .json sichern</button>
-      <div class="hint">Direkt hier auf der Baustelle sichern, ohne in den Bericht-Tab zu wechseln. Die genauen Feststellungstexte trägst du später am Bildschirm im Büro ein (Tab „Bericht" → „Reihenfolge &amp; Text bearbeiten").</div>
-    </div>
-
-    <div class="card">
-      <h2>Neue Feststellung</h2>
-      <label>Art der Feststellung</label>
-      <div class="type-toggle">
-        <button type="button" class="on" data-type="doku" onclick="setType('doku')">Dokumentation</button>
-        <button type="button" data-type="veranlassung" onclick="setType('veranlassung')">Veranlassung</button>
-      </div>
-
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
-        <input type="checkbox" id="fTimestamp" checked style="width:auto;margin:0">
-        <span style="font-weight:600;color:var(--muted);font-size:12px">Datum/Uhrzeit ins Foto einblenden</span>
-      </label>
-      <label>Foto</label>
-      <label class="photo-box" for="photoInput">
-        <div id="photoPlaceholder">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-          <div class="cta">Foto aufnehmen / Fotos auswählen<span class="big">jedes Foto wird sofort als eigene Feststellung gespeichert</span></div>
-        </div>
-        <img id="photoPreview" style="display:none">
-      </label>
-      <input type="file" id="photoInput" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" onchange="handlePhoto(event)">
-      <div class="hint">Es können auch mehrere Fotos auf einmal ausgewählt werden — jedes Foto wird automatisch als eigene Feststellung angelegt (Gewerk, Ort, Info usw. trägst du später bequem auf der Berichtsseite ein) und zusätzlich in Originalqualität in deine Fotogalerie angeboten.</div>
-    </div>
-
-    <div class="card">
-      <h2>Zuletzt erfasst</h2>
-      <div id="recentList"><div class="empty">Noch keine Einträge</div></div>
-    </div>
-
-  </section>
-
   <!-- ===================== BERICHT ===================== -->
-  <section id="view-report" class="view">
+  <section id="view-report" class="view active">
 
     <div class="card no-print">
       <h2>Berichtsart</h2>
@@ -449,34 +408,6 @@
         <button type="button" data-modus="kurz" onclick="setBerichtsModus('kurz')">Baustellen-Kurzbericht</button>
       </div>
       <div class="hint" id="modusHint">Vollständiger QS-Bericht mit Verteiler, Rahmenterminen, Verlauf und Inhaltsverzeichnis.</div>
-    </div>
-
-    <div class="card no-print">
-      <h2>Dieser Bericht</h2>
-      <div class="report-meta auto">
-        <div><label>Datum Bericht</label><input type="text" id="rDatum" placeholder="TT.MM.JJJJ"></div>
-        <div id="berichtsNrField">
-          <label>Berichts-Nr. <button type="button" class="wetter-btn" onclick="startNewReportInReihe()" title="Aktuelle Feststellungen als Kurzdarstellung ablegen und Berichts-Nr. erhöhen">➜ neuer Bericht</button></label>
-          <input type="number" id="rBerichtsNr" placeholder="z. B. 1" min="1">
-        </div>
-        <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
-        <div><label>Temperatur Min.</label><input type="text" id="rTempMin" placeholder="z. B. 16,0°C"></div>
-        <div><label>Temperatur Max.</label><input type="text" id="rTempMax" placeholder="z. B. 22,0°C"></div>
-        <input type="text" id="rDateiname" style="display:none" aria-hidden="true">
-      </div>
-
-      <textarea class="mono" id="rVerteiler" style="display:none" aria-hidden="true"></textarea>
-      <textarea class="mono" id="rRahmen" style="display:none" aria-hidden="true"></textarea>
-
-      <div id="teilnehmerBlock" style="display:none">
-        <label style="margin-top:14px">Teilnehmer <span style="font-weight:400;color:var(--muted)">(ein Name je Zeile, z. B. „Herr Forster, IMP")</span></label>
-        <textarea id="rTeilnehmer" rows="4" placeholder="Herr Forster, IMP&#10;Herr Lingenfelser, GAPP"></textarea>
-      </div>
-
-      <div class="qs-only" style="margin-top:18px">
-        <h3 class="sub-h">Bautenstand &amp; Pünktlichkeit <span>(bei jedem Bericht aktualisieren)</span></h3>
-        <div id="rahmenStatusEditor"></div>
-      </div>
     </div>
 
     <div class="card no-print">
@@ -513,6 +444,58 @@
     </div>
 
     <div class="card no-print">
+      <h2>Dieser Bericht</h2>
+      <div class="report-meta auto">
+        <div><label>Datum Bericht</label><input type="text" id="rDatum" placeholder="TT.MM.JJJJ"></div>
+        <div id="berichtsNrField">
+          <label>Berichts-Nr. <button type="button" class="wetter-btn" onclick="startNewReportInReihe()" title="Aktuelle Feststellungen als Kurzdarstellung ablegen und Berichts-Nr. erhöhen">➜ neuer Bericht</button></label>
+          <input type="number" id="rBerichtsNr" placeholder="z. B. 1" min="1">
+        </div>
+        <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
+        <div><label>Temperatur Min.</label><input type="text" id="rTempMin" placeholder="z. B. 16,0°C"></div>
+        <div><label>Temperatur Max.</label><input type="text" id="rTempMax" placeholder="z. B. 22,0°C"></div>
+        <input type="text" id="rDateiname" style="display:none" aria-hidden="true">
+      </div>
+
+      <textarea class="mono" id="rVerteiler" style="display:none" aria-hidden="true"></textarea>
+      <textarea class="mono" id="rRahmen" style="display:none" aria-hidden="true"></textarea>
+
+      <div id="teilnehmerBlock" style="display:none">
+        <label style="margin-top:14px">Teilnehmer <span style="font-weight:400;color:var(--muted)">(ein Name je Zeile, z. B. „Herr Forster, IMP")</span></label>
+        <textarea id="rTeilnehmer" rows="4" placeholder="Herr Forster, IMP&#10;Herr Lingenfelser, GAPP"></textarea>
+      </div>
+
+      <div class="qs-only" style="margin-top:18px">
+        <h3 class="sub-h">Bautenstand &amp; Pünktlichkeit <span>(bei jedem Bericht aktualisieren)</span></h3>
+        <div id="rahmenStatusEditor"></div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2>Fotos erfassen</h2>
+      <label>Art der Feststellung</label>
+      <div class="type-toggle">
+        <button type="button" class="on" data-type="doku" onclick="setType('doku')">Dokumentation</button>
+        <button type="button" data-type="veranlassung" onclick="setType('veranlassung')">Veranlassung</button>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <input type="checkbox" id="fTimestamp" checked style="width:auto;margin:0">
+        <span style="font-weight:600;color:var(--muted);font-size:12px">Datum/Uhrzeit ins Foto einblenden</span>
+      </label>
+      <label>Foto</label>
+      <label class="photo-box" for="photoInput">
+        <div id="photoPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          <div class="cta">Foto aufnehmen / Fotos auswählen<span class="big">jedes Foto wird sofort als eigene Feststellung gespeichert</span></div>
+        </div>
+        <img id="photoPreview" style="display:none">
+      </label>
+      <input type="file" id="photoInput" accept="image/*" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" onchange="handlePhoto(event)">
+      <div class="hint">Mehrere Fotos auf einmal sind möglich — jedes wird als eigene Feststellung angelegt und erscheint unten unter „Reihenfolge &amp; Text bearbeiten“. Das Original wird zusätzlich in deine Fotogalerie angeboten.</div>
+    </div>
+
+    <div class="card no-print">
       <h2>Reihenfolge &amp; Text bearbeiten</h2>
       <div class="editor-toolbar">
         <button type="button" class="btn-secondary small" id="editorFilterBtn" onclick="toggleEditorFilter()">Nur unbearbeitete anzeigen</button>
@@ -529,8 +512,14 @@
       <button class="btn-primary" onclick="exportPdf()" id="genPdfBtn">PDF exportieren</button>
       <div class="hint" id="genPdfHint">Erstellt direkt eine PDF-Datei aus der aktuellen Vorschau unten — die Vorschau wird davor automatisch aktualisiert.</div>
 
-      <button class="btn-secondary" style="margin-top:10px" onclick="exportSessionJson()" id="genJsonBtn">Berichtsdaten herunterladen (.json)</button>
-      <div class="hint">Zum Fortführen dieser Baustelle beim nächsten Termin oder im nächsten Bericht wieder hochladen (Tab „Erfassen" → „Vorherige Sitzung laden") — dient außerdem als Sicherung.</div>
+      <button class="btn-secondary" style="margin-top:10px" onclick="exportSessionJson()" id="genJsonBtn">Sitzung sichern (.json)</button>
+      <div class="hint">Sichert alle Fotos und Eingaben — zum Fortführen beim nächsten Termin oder Bericht, und als Backup.</div>
+
+      <details class="help" style="margin-top:14px">
+        <summary>Vorherige Sitzung laden (fortsetzen)</summary>
+        <input type="file" accept=".json" id="continueImportInput" onchange="importContinueFile(event)" style="margin-top:8px">
+        <div class="hint">Lädt eine zuvor gesicherte .json-Datei und ergänzt die Feststellungen in dieser Sammlung.</div>
+      </details>
 
       <details class="help" style="margin-top:14px">
         <summary>Sammlung vollständig abschließen (Zwischenspeicher leeren)</summary>
@@ -541,7 +530,7 @@
 
     <div class="card no-print" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <button type="button" class="btn-secondary small" id="refreshPreviewBtn" onclick="refreshReportViews()">↻ Vorschau aktualisieren</button>
-      <span class="hint" style="margin:0">Übernimmt Änderungen aus Berichtskopf und Feststellungen in die Vorschau unten.</span>
+      <span class="hint" style="margin:0">Übernimmt Änderungen aus den Eingaben und Feststellungen in die Vorschau unten.</span>
     </div>
 
     <div class="report-doc" id="reportOutput"></div>
@@ -550,16 +539,7 @@
 
 </div>
 
-<nav class="tabbar no-print">
-  <button class="active" id="tab-capture" onclick="switchTab('capture')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-    Erfassen
-  </button>
-  <button id="tab-report" onclick="switchTab('report')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6M9 7h3"/></svg>
-    Bericht
-  </button>
-</nav>
+
 
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightboxImg" src="">
@@ -777,7 +757,7 @@ async function restoreFromIdb(){
   const map = new Map(allEntries.map(x => [x.id, x]));
   stored.forEach(x => { if(!map.has(x.id)) map.set(x.id, x); });
   allEntries = Array.from(map.values());
-  renderRecent();
+  renderEditor();
   refreshReportViews();
   setConnStatus(true, stored.length + ' Einträge aus dem Zwischenspeicher dieses Geräts wiederhergestellt.');
 }
@@ -787,7 +767,7 @@ async function finishCollection(){
   await idbClearAll();
   allEntries = [];
   verlaufEntries = [];
-  renderRecent();
+  renderEditor();
   renderVerlauf();
   refreshReportViews();
   setConnStatus(true, 'Sammlung abgeschlossen — Zwischenspeicher wurde geleert. Bereit für eine neue Begehung.');
@@ -998,7 +978,7 @@ async function importContinueFile(e){
     });
     newOnesSorted.forEach(x => map.set(x.id, x));
     allEntries = Array.from(map.values());
-    renderRecent();
+    renderEditor();
     newOnesSorted.forEach(x => idbPutEntry(x));
 
     importedVerlauf.forEach(v => {
@@ -1216,6 +1196,7 @@ async function processPhotoFiles(files){
   preview.style.display = 'none';
   placeholder.style.display = 'block';
   placeholder.innerHTML = originalCta;
+  try{ refreshReportViews(); }catch(e){ console.error(e); }
 
   if(failed.length){
     alert(`${failed.length} von ${total} Foto(s) konnten nicht verarbeitet werden:\n` + failed.join('\n'));
@@ -1357,7 +1338,7 @@ function processSinglePhoto(file, sortOrder){
             sortOrder, photoUrl: previewDataUrl, photoPrintUrl: printDataUrl, createdAt: Date.now()
           };
           allEntries.push(entry);
-          renderRecent();
+          renderEditor();
           idbPutEntry(entry);
 
           document.getElementById('photoPreview').src = previewDataUrl;
@@ -1372,35 +1353,10 @@ function processSinglePhoto(file, sortOrder){
   });
 }
 
-function switchTab(name){
-  document.getElementById('view-capture').classList.toggle('active', name==='capture');
-  document.getElementById('view-report').classList.toggle('active', name==='report');
-  document.getElementById('tab-capture').classList.toggle('active', name==='capture');
-  document.getElementById('tab-report').classList.toggle('active', name==='report');
-  if(name==='report') refreshReportViews();
-}
-
-function renderRecent(){
-  const container = document.getElementById('recentList');
-  if(allEntries.length===0){ container.innerHTML = '<div class="empty">Noch keine Einträge</div>'; return; }
-  const recent = allEntries.slice(-8).reverse();
-  container.innerHTML = recent.map(e => `
-    <div class="recent-item">
-      <img src="${e.photoUrl}">
-      <div class="meta">
-        <div class="t1">${e.type==='veranlassung' ? '<span class="badge rust">Veranlassung</span>' : ''}${escapeHtml(e.gewerk)}</div>
-        <div class="t2">${e.ort ? escapeHtml(e.ort) + ' · ' : ''}${e.datum}</div>
-      </div>
-      <button class="btn-secondary small" onclick="saveToGallery('${e.id}')">Galerie</button>
-      <button class="del-btn" onclick="deleteEntry('${e.id}')" title="Löschen">✕</button>
-    </div>
-  `).join('');
-}
-
 function deleteEntry(id){
   if(!confirm('Diese Feststellung löschen?')) return;
   allEntries = allEntries.filter(e => e.id !== id);
-  renderRecent();
+  renderEditor();
   refreshReportViews();
   idbDeleteEntry(id);
 }
@@ -1544,7 +1500,7 @@ function startNewReportInReihe(){
   berichtsNrEl.value = newNr;
 
   renderVerlauf();
-  renderRecent();
+  renderEditor();
   renderEditor();
   refreshReportViews();
 
@@ -2322,6 +2278,10 @@ async function exportPdf(){
     btn.disabled = false; btn.textContent = 'PDF exportieren';
   }
 }
+
+// Erste Darstellung der Seite (Editor, Vorschau, Tabellen) - bewusst ganz am Ende,
+// damit alle Variablen/Funktionen oben bereits initialisiert sind.
+refreshReportViews();
 
 // (kein Ordner-Support-Check mehr noetig - Speicherung laeuft ausschliesslich ueber Galerie + Export/Import)
 </script>
