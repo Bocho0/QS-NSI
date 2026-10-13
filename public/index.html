@@ -35,10 +35,10 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--concrete); color:var(--ink); font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding-bottom:24px; }
   h1,h2,h3,.display{ font-family:'Archivo',system-ui,sans-serif; font-weight:800; letter-spacing:-0.01em; margin:0; }
-  header.top{ background:var(--charcoal); color:var(--white); padding:14px 16px; position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; gap:12px; }
-  header.top .proj{ font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); font-weight:700; margin-bottom:2px; }
-  header.top h1{ font-size:20px; color:var(--white); }
-  header.top .app-logo{ height:30px; width:30px; object-fit:contain; flex-shrink:0; filter:invert(1) brightness(1.8); opacity:0.92; }
+  header.top{ background:var(--white); color:var(--charcoal); padding:12px 20px 10px; position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; border-bottom:1.1px solid #2A2A2A; }
+  header.top .proj{ font-family:'Barlow',system-ui,sans-serif; font-size:21px; font-weight:400; letter-spacing:0.02em; line-height:1.25; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  header.top .sub{ font-family:'Barlow',system-ui,sans-serif; font-size:12px; font-weight:300; color:#4A4A4A; margin-top:2px; letter-spacing:0.02em; }
+  header.top .app-logo{ height:34px; width:auto; object-fit:contain; flex-shrink:0; }
   .container{ max-width:640px; margin:0 auto; padding:16px; }
   nav.tabbar{ position:fixed; bottom:0; left:0; right:0; background:var(--charcoal); display:flex; z-index:30; border-top:2px solid var(--accent); }
   nav.tabbar button{ flex:1; background:none; border:none; color:#9CA0A4; font-family:'Inter'; font-weight:600; font-size:13px; padding:12px 8px 10px; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
@@ -93,8 +93,8 @@
   .conn-status.bad .dot{ background:var(--rust); }
   .report-meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .report-meta .full{ grid-column:1 / -1; }
-  .report-meta.auto{ grid-template-columns:repeat(3,1fr); align-items:end; }
-  @media (max-width:520px){ .report-meta.auto{ grid-template-columns:1fr 1fr; } }
+  .report-meta.auto{ grid-template-columns:repeat(5,1fr); align-items:end; }
+  @media (max-width:640px){ .report-meta.auto{ grid-template-columns:1fr 1fr; } }
   .report-meta.auto .wetter-btn{ white-space:nowrap; }
   .report-meta.auto label{ display:flex; align-items:center; gap:8px; min-height:24px; margin-bottom:0; }
   .sub-h{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--concrete-2); }
@@ -387,9 +387,9 @@
 <body>
 
 <header class="top">
-  <div>
-    <div class="proj" id="headerProj">XY | München — Baustelle XY</div>
-    <h1>QS-Bautenstand</h1>
+  <div style="min-width:0">
+    <div class="proj" id="headerProj">XY | München</div>
+    <div class="sub">QS-Bautenstand</div>
   </div>
   <img class="app-logo" id="headerLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEUAAABFCAMAAAArU9sbAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAGnUExURf////7+/tvb25mZmZGRkY+Pj5ycnOjo6KysrJCQkMvLy/39/ZeXl0REREVFRTk5OcXFxcDAwFFRUUFBQWFhYczMzI6OjkZGRjs7O7u7u8HBwVJSUkJCQmBgYEdHR0lJSUhISF9fX4mJiYyMjIqKiouLi1xcXI2NjXV1dYODgz8/P/n5+cLCwjw8PPj4+IGBgT4+Pjo6OvX19b+/v/v7+4WFhUpKSr29va+vr9XV1e/v79zc3N7e3vPz80NDQ9bW1qmpqZ6enjMzMzIyMra2tqKiorq6uqGhoaioqFNTU05OTvz8/Kenp62trWdnZ66uroKCgoSEhIeHh/f39/b29vDw8H5+fmhoaJ+fnz09Pbm5ucrKypaWljQ0NMfHx0tLS/T09Ly8vDc3N2NjY9PT09HR0eTk5Onp6dnZ2YiIiLCwsPHx8e7u7uzs7MjIyICAgN/f339/f3t7e6SkpJKSksPDw8/Pz7e3t0BAQGpqaqqqqqWlpfLy8ri4uPr6+mVlZZubm5iYmJWVlX19fU1NTV5eXllZWdjY2Orq6uHh4ZqampOTk76+vrsXhk4AAAAJcEhZcwAAFxEAABcRAcom8z8AAANnSURBVFhH3ZjpV1JBFMDvCzD1BWoYICIPASMhFU1xKyst06i0tAVbUCvN1GxfbLOibPujOzODvJnLvIX0Q6efXzhzr78zc99s7wGAYgZQcKsAzdjncBriqtpPJdU4oFPjrFUA1ANujzF19cTScNAkx9t4CED1efzGBJpIh4PNJjmhltq9tYS1csLIguOapkUES7jVFY3Fi39tlFj8sFuweOIJTM2REG/R2tgT5VHak4IllMIZAEc7rCydXWm/v5uz9OAMgGOiJYrjAL19oUwm2b9by0BfPN4+SH7atGRiOC5g0yLrC4ddi6S6HHYtdvoiedJB0RLfaVeGho9zDJ+gycQycpIPME6l5dVNnR5Nc4yd0VdAkg8wvGH5iFJnO/ilFhivYDXq1d2VRe/LuW53EfKfvGWnnYM0y6qbmtCaKZPNGY9oYe08k+fJs5NUNzt4oZpyceJSSLC4iwGOqahXPiKOPrIz6JaQihMA6gPyEemkppHlr+auejldqeXKTA9i9uq1SvsSuX6jCuNoFKtrbfGP5MpIu8X5YsNihG1LzNQyRywNppbWmwDqrQAei07H7SCx3MkHcrm6eewAWBjL5Rbv3gOA+z6XAT5fLLZEkpcdvoQrKtmlHqzEfPGHq7hZQAF9uqqQFWJFlCzp6//J6pqEIcraPBt2Dw5zrNOqP5rekNBF2dh4TFKWfE9wXOfps3UA9XkO7+wco/S0f5E3yalreQmgJkzn7ivysOncNYLNXbvryAh+TaeTZdA1vUDqwiyvcUISnWqRN1ObiGq2e9PVyHbvtzhlc2BF2L0zbUoWoXZOkx1Tt4Te4ZQs9FvePLJ0331PqsssszgDoMHyLvWBngEV3Q4lJwmz6NW1YZGcJOw8mtNHZGmRjai3HVXX0iIbUbEvlVgkfWHndBP5xSySXU08p8MftxyYT40jQnXdn3GGY+uL8Dbh1wrlkNcWbr74cbxQKOTRWxZ+j/N4aDNXF1mKeJcyhLcYYNEXwuJ4qS5GKd6vpf0lks/ICH/b1i04yNDCNe92nnTXdynL670ly8gPHGUsk+u54azjYPNlBjdzGK4jDsO5W8JwHXHYtOxNX/4pi2Tf5bBr2XVfyPeXyApuFgiS7y9eM4uy/dP1y/kbNwsoU06XKyG513HoH5cMsUr5Ax5gj6pG+yeiAAAAAElFTkSuQmCC" alt="Logo">
 </header>
@@ -448,7 +448,7 @@
       <div class="report-meta auto">
         <div><label>Datum Bericht</label><input type="text" id="rDatum" placeholder="TT.MM.JJJJ"></div>
         <div id="berichtsNrField">
-          <label>Berichts-Nr. <button type="button" class="wetter-btn" onclick="startNewReportInReihe()" title="Aktuelle Feststellungen als Kurzdarstellung ablegen und Berichts-Nr. erhöhen">➜ neuer Bericht</button></label>
+          <label>Berichts-Nr. <button type="button" class="wetter-btn" onclick="startNewReportInReihe()" title="Neuer Bericht: Aktuelle Feststellungen als Kurzdarstellung ablegen und Berichts-Nr. erhöhen">➜ neu</button></label>
           <input type="number" id="rBerichtsNr" placeholder="z. B. 1" min="1">
         </div>
         <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
@@ -836,7 +836,6 @@ function setConnStatus(ok, text){
   el.className = 'conn-status no-print ' + (ok ? 'ok' : 'bad');
   el.innerHTML = '<span class="dot"></span>' + text;
 }
-setConnStatus(true, 'Bereit — Fotos werden direkt in deine Fotogalerie gespeichert.');
 
 // Beim Laden der Seite automatisch prüfen, ob im Zwischenspeicher dieses
 // Geräts noch Feststellungen aus einer nicht abgeschlossenen Sitzung liegen
@@ -1251,7 +1250,8 @@ function processSinglePhoto(file, sortOrder){
 
     function drawTimestamp(ctx, w, h){
       if(!document.getElementById('fTimestamp').checked) return;
-      const now = new Date();
+      // Aufnahmezeitpunkt des Fotos (EXIF), sonst Änderungsdatum der Datei, sonst jetzt
+      const now = capturedAt;
       const ts = now.toLocaleDateString('de-DE') + '   ' + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
       const fontSize = Math.max(20, Math.round(w * 0.040));
       ctx.font = fontSize + 'px monospace';
