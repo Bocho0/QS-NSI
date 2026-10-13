@@ -137,8 +137,7 @@
   .edit-row{ align-items:flex-start; }
   .badge.orange{ background:var(--orange); color:var(--white); }
   .badge.green{ background:var(--green); color:var(--white); }
-  .badge.dirty{ background:var(--rust); color:var(--white); animation:pulseBadge 1.6s ease-in-out infinite; }
-  @keyframes pulseBadge{ 0%,100%{ opacity:1; } 50%{ opacity:.6; } }
+  .badge.dirty{ background:var(--rust); color:var(--white); }
   .save-btn.dirty{ background:var(--charcoal); color:#fff; border-color:var(--charcoal); }
   .spin-icon{ display:inline-block; }
   .spinning .spin-icon{ animation:spinOnce .7s ease-in-out; }
@@ -516,7 +515,7 @@
     <div class="card no-print">
       <h2>Reihenfolge &amp; Text bearbeiten</h2>
       <div class="editor-toolbar">
-        <button type="button" class="btn-secondary small" id="editorFilterBtn" onclick="toggleEditorFilter()">Nur unbearbeitete anzeigen</button>
+        <button type="button" class="btn-secondary small" id="editorFilterBtn" onclick="toggleEditorFilter()">Nur offene anzeigen</button>
       </div>
       <div class="edit-group">
         <h3 id="editorDokuHeading">Dokumentation</h3>
@@ -1402,13 +1401,32 @@ function updateEntryFields(id, fields){
 
 // Sobald in einer Feststellung etwas geändert wird: Status auf "nicht gespeichert"
 // umstellen und den Speichern-Button hervorheben (bis erneut gespeichert wird).
-function markEntryDirty(id){
+const dirtyEntries = new Set();      // Feststellungen mit ungespeicherten Änderungen
+const entryDrafts = {};              // zwischengespeicherte Eingaben dieser Feststellungen
+const DRAFT_FIELDS = ['gewerk','ort','bauteil','arbeiten','datum','verantwortlich'];
+
+function applyDirtyUi(id){
   const row = document.querySelector('.edit-row[data-id="' + id + '"]');
   if(!row) return;
   const st = row.querySelector('.edit-status');
   if(st && !st.querySelector('.dirty')) st.innerHTML = '<span class="badge dirty">Änderungen nicht gespeichert</span>';
   const btn = document.getElementById('save_btn_' + id);
   if(btn) btn.classList.add('dirty');
+}
+function markEntryDirty(id){
+  dirtyEntries.add(id);
+  const d = entryDrafts[id] = entryDrafts[id] || {};
+  DRAFT_FIELDS.forEach(f => { const el = document.getElementById('ed_' + f + '_' + id); if(el) d[f] = el.value; });
+  applyDirtyUi(id);
+}
+// Nach jedem Neuaufbau des Editors: ungespeicherte Eingaben wiederherstellen
+function reapplyDirtyDrafts(){
+  dirtyEntries.forEach(id => {
+    if(!allEntries.some(e => e.id === id)){ dirtyEntries.delete(id); delete entryDrafts[id]; return; }
+    const d = entryDrafts[id] || {};
+    DRAFT_FIELDS.forEach(f => { const el = document.getElementById('ed_' + f + '_' + id); if(el && d[f] !== undefined) el.value = d[f]; });
+    applyDirtyUi(id);
+  });
 }
 
 // Aktualisieren-Button der Vorschau: Symbol dreht sich kurz als Rückmeldung
@@ -1437,6 +1455,7 @@ async function saveEntryEdit(id){
   }
   try{
     await updateEntryFields(id, fields);
+    dirtyEntries.delete(id); delete entryDrafts[id];
     refreshReportViews();
   }catch(err){
     console.error(err);
@@ -1772,7 +1791,7 @@ let editorShowOnlyOpen = false;
 function toggleEditorFilter(){
   editorShowOnlyOpen = !editorShowOnlyOpen;
   const btn = document.getElementById('editorFilterBtn');
-  if(btn) btn.textContent = editorShowOnlyOpen ? 'Alle anzeigen' : 'Nur unbearbeitete anzeigen';
+  if(btn) btn.textContent = editorShowOnlyOpen ? 'Alle anzeigen' : 'Nur offene anzeigen';
   renderEditor();
 }
 
@@ -1788,8 +1807,8 @@ function renderEditor(){
   if(veranlHeading) veranlHeading.innerHTML = 'Veranlassungen ' + (veranl.length ? `<span class="edit-count">(${veranlDone} von ${veranl.length} bearbeitet)</span>` : '');
 
   const build = (fullList) => {
-    const list = editorShowOnlyOpen ? fullList.filter(e=>!e.bearbeitet) : fullList;
-    if(!list.length) return `<div class="empty">${editorShowOnlyOpen ? 'Keine unbearbeiteten Einträge mehr' : 'Keine Einträge'}</div>`;
+    const list = editorShowOnlyOpen ? fullList.filter(e=>!e.bearbeitet || dirtyEntries.has(e.id)) : fullList;
+    if(!list.length) return `<div class="empty">${editorShowOnlyOpen ? 'Keine offenen Einträge mehr' : 'Keine Einträge'}</div>`;
     return list.map((e, idx) => `
     <div class="edit-row" data-id="${e.id}" draggable="true"
       ondragstart="handleDragStart(event,'${e.id}')" ondragend="handleDragEnd(event)"
@@ -1822,6 +1841,7 @@ function renderEditor(){
   const veranlContainer = document.getElementById('editorVeranl');
   dokuContainer.innerHTML = build(doku);
   veranlContainer.innerHTML = build(veranl);
+  reapplyDirtyDrafts();
 }
 
 function openLightboxById(id){
