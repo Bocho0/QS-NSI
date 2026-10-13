@@ -105,7 +105,8 @@
   .report-meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .report-meta .full{ grid-column:1 / -1; }
   .report-meta.auto{ grid-template-columns:repeat(5,1fr); align-items:end; }
-  @media (max-width:640px){ .report-meta.auto{ grid-template-columns:1fr 1fr; } }
+  .report-meta.auto.cols4{ grid-template-columns:repeat(4,1fr); }
+  @media (max-width:640px){ .report-meta.auto, .report-meta.auto.cols4{ grid-template-columns:1fr 1fr; } }
   .report-meta.auto .wetter-btn{ white-space:nowrap; }
   .report-meta.auto label{ display:flex; align-items:center; gap:8px; min-height:24px; margin-bottom:0; }
   .sub-h{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--concrete-2); }
@@ -582,9 +583,11 @@ function setBerichtsModus(modus){
   if(headerSub) headerSub.textContent = berichtsModus === 'kurz' ? 'Kurzbericht' : 'QS-Bericht';
   const hint = document.getElementById('modusHint');
   if(hint) hint.textContent = berichtsModus === 'kurz'
-    ? 'Kurzbericht: nur Deckblatt und Dokumentation. Statt Verteiler werden Teilnehmer der Begehung erfasst. Rahmentermine bleiben gespeichert, werden aber nicht abgefragt und nicht ausgegeben.'
+    ? 'Kurzbericht: nur Deckblatt und Dokumentation, mit Teilnehmern statt Verteiler.'
     : 'Vollständiger QS-Bericht mit Verteiler, Rahmenterminen, Verlauf und Inhaltsverzeichnis.';
   document.querySelectorAll('.qs-only').forEach(el => { el.style.display = berichtsModus === 'kurz' ? 'none' : ''; });
+  const metaGrid = document.querySelector('.report-meta.auto');
+  if(metaGrid) metaGrid.classList.toggle('cols4', berichtsModus === 'kurz');
   const teilnehmerBlock = document.getElementById('teilnehmerBlock');
   if(teilnehmerBlock) teilnehmerBlock.style.display = berichtsModus === 'kurz' ? '' : 'none';
   // Kurzbericht ist kein durchnummerierter Bericht in einer Reihe, sondern
