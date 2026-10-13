@@ -485,7 +485,7 @@
       </details>
       </div>
 
-      <label>Verlauf vorheriger Berichte <span style="font-weight:400;color:var(--muted)">(Kurzdarstellung, wird automatisch beim Fortführen einer Berichtsreihe ergänzt)</span></label>
+      <label>Vorherige Berichte <span style="font-weight:400;color:var(--muted)">(Formulierung und Zusammenfassung sind bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe)</span></label>
       <div id="verlaufList"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
     </div>
 
@@ -1424,13 +1424,34 @@ function renderVerlauf(){
   }
   box.innerHTML = verlaufEntries.map(v => {
     const range = (v.von === v.bis) ? String(v.von) : `${v.von}–${v.bis}`;
-    const zeitraum = v.zeitraumVon === v.zeitraumBis ? v.zeitraumVon : `${v.zeitraumVon} – ${v.zeitraumBis}`;
     return `
-    <div class="verlauf-line" data-id="${v.id}">
-      <span class="vtxt"><b>Nr. ${escapeHtml(range)}</b> · ${escapeHtml(zeitraum || '')} · Bericht ${escapeHtml(v.berichtNr || '?')}: ${escapeHtml(v.zusammenfassung || '')}</span>
-      <button type="button" onclick="deleteVerlaufLine('${v.id}')" title="Zeile entfernen">✕</button>
+    <div class="verlauf-line" data-id="${v.id}" style="flex-direction:column;align-items:stretch;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <span class="vtxt"><b>Nr. ${escapeHtml(range)}</b></span>
+        <button type="button" onclick="deleteVerlaufLine('${v.id}')" title="Zeile entfernen">✕</button>
+      </div>
+      <label style="margin:0;font-size:11px">Bericht</label>
+      <input type="text" value="${escapeHtml(verlaufBerichtText(v))}" oninput="updateVerlaufField('${v.id}','berichtText',this.value)">
+      <label style="margin:0;font-size:11px">Zusammenfassung</label>
+      <input type="text" value="${escapeHtml(v.zusammenfassung || '')}" oninput="updateVerlaufField('${v.id}','zusammenfassung',this.value)">
     </div>`;
   }).join('');
+}
+
+// Standardformulierung "QS-Bericht X vom TT.MM.JJJJ" (ohne führende Nullen),
+// überschrieben durch eine manuell angepasste Formulierung (berichtText).
+function verlaufBerichtText(v){
+  if(typeof v.berichtText === 'string') return v.berichtText;
+  const zeitraum = v.zeitraumVon === v.zeitraumBis ? v.zeitraumVon : `${v.zeitraumVon} – ${v.zeitraumBis}`;
+  return `QS-Bericht ${parseInt(v.berichtNr, 10) || v.berichtNr || '?'}${zeitraum ? ' vom ' + zeitraum : ''}`;
+}
+function updateVerlaufField(id, field, value){
+  const v = verlaufEntries.find(x => x.id === id);
+  if(!v) return;
+  v[field] = value;
+  idbPutMeta('verlauf', verlaufEntries);
+  clearTimeout(window._verlaufRefreshT);
+  window._verlaufRefreshT = setTimeout(() => { try{ refreshReportViews(); }catch(e){} }, 400);
 }
 
 function deleteVerlaufLine(id){
@@ -1997,12 +2018,11 @@ function renderReport(){
     // Verlauf vorheriger Berichte gehört (wie im PDF) auf die
     // Rahmentermine-Seite, nicht auf die Dokumentationsseite.
     if(verlaufEntries.length){
-      rahmenBody += `<h3 class="section">Verlauf vorheriger Berichte</h3>
-        <table class="doku-index"><colgroup><col style="width:70px"><col style="width:160px"><col></colgroup><tr><th>Nr.</th><th>Zeitraum</th><th>Zusammenfassung</th></tr>`;
+      rahmenBody += `<h3 class="section">Vorherige Berichte</h3>
+        <table class="doku-index"><colgroup><col style="width:56px"><col style="width:200px"><col></colgroup><tr><th>Nr.</th><th>Bericht</th><th>Zusammenfassung</th></tr>`;
       verlaufEntries.forEach(v => {
         const range = (v.von === v.bis) ? String(v.von) : `${v.von}–${v.bis}`;
-        const zeitraum = v.zeitraumVon === v.zeitraumBis ? v.zeitraumVon : `${v.zeitraumVon} – ${v.zeitraumBis}`;
-        rahmenBody += `<tr><td>${escapeHtml(range)}</td><td>QS-Bericht ${escapeHtml(String(v.berichtNr).padStart(3,'0'))} vom ${escapeHtml(zeitraum||'')}</td><td>${escapeHtml(v.zusammenfassung||'')}</td></tr>`;
+        rahmenBody += `<tr><td>${escapeHtml(range)}</td><td>${escapeHtml(verlaufBerichtText(v))}</td><td>${escapeHtml(v.zusammenfassung||'')}</td></tr>`;
       });
       rahmenBody += `</table>`;
     }
