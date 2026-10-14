@@ -455,8 +455,9 @@
         </div>
 
         <div class="qs-only">
-          <h3 class="sub-h">Vorherige Berichte <span>(Formulierung und Zusammenfassung bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe)</span></h3>
+          <h3 class="sub-h">Vorherige Berichte <span>(Formulierung und Zusammenfassung bearbeitbar; Einträge entstehen automatisch beim Fortführen einer Berichtsreihe, zusätzlich lassen sich eigene Einträge ergänzen)</span></h3>
           <div id="verlaufList"><div class="empty">Noch kein Verlauf — entsteht automatisch, wenn eine JSON-Datei zum Fortführen der Berichtsreihe hochgeladen wird.</div></div>
+          <button type="button" class="btn-secondary small" style="margin-top:8px" onclick="addManualVerlauf()">+ Bericht manuell hinzufügen</button>
         </div>
       </details>
     </div>
@@ -1008,7 +1009,7 @@ async function importContinueFile(e){
     newOnesSorted.forEach(x => idbPutEntry(x));
 
     importedVerlauf.forEach(v => {
-      if(!verlaufEntries.some(x => x.von === v.von && x.bis === v.bis)) verlaufEntries.push(v);
+      if(!verlaufEntries.some(x => x.id === v.id || (!x.manual && !v.manual && x.von === v.von && x.bis === v.bis))) verlaufEntries.push(v);
     });
     if(importedVerlauf.length){ renderVerlauf(); idbPutMeta('verlauf', verlaufEntries); }
 
@@ -1472,11 +1473,15 @@ function renderVerlauf(){
     return `
     <div class="verlauf-line" data-id="${v.id}" style="flex-direction:column;align-items:stretch;gap:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <span class="vtxt"><b>Nr. ${escapeHtml(range)}</b></span>
+        <span class="vtxt"><b>${v.manual ? 'Manueller Eintrag' : 'Nr. ' + escapeHtml(range)}</b></span>
         <button type="button" onclick="deleteVerlaufLine('${v.id}')" title="Zeile entfernen">✕</button>
       </div>
-      <label style="margin:0;font-size:11px">Bericht</label>
-      <input type="text" value="${escapeHtml(verlaufBerichtText(v))}" oninput="updateVerlaufField('${v.id}','berichtText',this.value)">
+      <div style="display:grid;grid-template-columns:90px 1fr;gap:10px">
+        <div><label style="margin:0;font-size:11px">Nr.</label>
+          <input type="text" value="${escapeHtml(verlaufNrText(v))}" oninput="updateVerlaufField('${v.id}','nrText',this.value)"></div>
+        <div><label style="margin:0;font-size:11px">Bericht</label>
+          <input type="text" value="${escapeHtml(verlaufBerichtText(v))}" placeholder="z. B. QS-Bericht 1 vom 01.09.2026" oninput="updateVerlaufField('${v.id}','berichtText',this.value)"></div>
+      </div>
       <label style="margin:0;font-size:11px">Zusammenfassung</label>
       <input type="text" value="${escapeHtml(v.zusammenfassung || '')}" oninput="updateVerlaufField('${v.id}','zusammenfassung',this.value)">
     </div>`;
@@ -1485,6 +1490,19 @@ function renderVerlauf(){
 
 // Standardformulierung "QS-Bericht X vom TT.MM.JJJJ" (ohne führende Nullen),
 // überschrieben durch eine manuell angepasste Formulierung (berichtText).
+function verlaufNrText(v){
+  if(typeof v.nrText === 'string') return v.nrText;
+  return (v.von === v.bis) ? String(v.von) : `${v.von}–${v.bis}`;
+}
+function addManualVerlauf(){
+  verlaufEntries.push({
+    id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    manual: true, berichtNr: '', von: '', bis: '', nrText: '', berichtText: '', zusammenfassung: ''
+  });
+  renderVerlauf();
+  idbPutMeta('verlauf', verlaufEntries);
+  refreshReportViews();
+}
 function verlaufBerichtText(v){
   if(typeof v.berichtText === 'string') return v.berichtText;
   const zeitraum = v.zeitraumVon === v.zeitraumBis ? v.zeitraumVon : `${v.zeitraumVon} – ${v.zeitraumBis}`;
@@ -2117,8 +2135,7 @@ function renderReport(){
       rahmenBody += `<h3 class="section">Vorherige Berichte</h3>
         <table class="doku-index"><colgroup><col style="width:68px"><col style="width:168px"><col></colgroup><tr><th>Nr.</th><th>Bericht</th><th>Zusammenfassung</th></tr>`;
       verlaufEntries.forEach(v => {
-        const range = (v.von === v.bis) ? String(v.von) : `${v.von}–${v.bis}`;
-        rahmenBody += `<tr><td>${escapeHtml(range)}</td><td>${escapeHtml(verlaufBerichtText(v))}</td><td>${escapeHtml(v.zusammenfassung||'')}</td></tr>`;
+        rahmenBody += `<tr><td>${escapeHtml(verlaufNrText(v))}</td><td>${escapeHtml(verlaufBerichtText(v))}</td><td>${escapeHtml(v.zusammenfassung||'')}</td></tr>`;
       });
       rahmenBody += `</table>`;
     }
