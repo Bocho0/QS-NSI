@@ -832,12 +832,14 @@ function parseGermanDateToISO(str){
   return `${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}`;
 }
 
-// Baustellen-Kürzel für den Dateinamen: der Teil VOR dem "|" in "Projekt /
-// Baustelle" (z. B. "NFM" aus "NFM | München").
+// Baustellen-Kürzel für Dateiname und Fußzeile: kommt aus dem Feld
+// "Baustellenbezeichnung" (z. B. "NSI"). Ist es leer, wird ersatzweise das
+// erste Wort aus "Projekt / Baustelle" genommen (vor einem "|").
 function guessKuerzel(){
+  const baustelle = document.getElementById('rBaustelle').value.trim();
+  if(baustelle) return baustelle.split(/[|¦]/)[0].trim();
   const projekt = document.getElementById('rProjekt').value.trim();
-  if(projekt.includes('|')) return projekt.split('|')[0].trim();
-  return projekt;
+  return projekt.split(/[|¦]/)[0].trim().split(/\s+/)[0] || '';
 }
 
 // Dateiname automatisch aus Datum + Berichts-Nr. + Baustellen-Kürzel
