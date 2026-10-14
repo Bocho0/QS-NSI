@@ -31,7 +31,7 @@ function page(error) {
   const html = `<!doctype html>
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QS-Bautenstand – Anmeldung</title>
+<title>NSI-Berichtserstellung – Anmeldung</title>
 <link rel="icon" type="image/png" href="${LOGO}">
 <style>
   *{box-sizing:border-box}
@@ -54,7 +54,7 @@ function page(error) {
 </style></head><body>
 <form class="card" method="post" action="/__login" autocomplete="on">
   <img src="${LOGO}" alt="">
-  <h1>QS-Bautenstand</h1>
+  <h1>NSI-Berichtserstellung</h1>
   <p>Bitte melde dich an</p>
   ${error ? '<div class="err">Benutzername oder Passwort ist falsch.</div>' : ''}
   <label for="u">Benutzername</label>
@@ -86,16 +86,20 @@ export default async function middleware(request) {
     const userOk = !wantUser || user.toLowerCase() === wantUser.toLowerCase();
     if (userOk && same(given, pw)) {
       const t = await token(wantUser.toLowerCase(), pw);
-      return new Response(null, {
-        status: 303,
-        headers: {
-          location: '/',
-          'set-cookie': `${COOKIE}=${t}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-          'cache-control': 'no-store'
-        }
-      });
+      const h = new Headers({ location: '/?ok=1', 'cache-control': 'no-store' });
+      h.append('set-cookie', `${COOKIE}=${t}; Path=/; HttpOnly; Secure; SameSite=Lax`);
+      h.append('set-cookie', `qs_gate=1; Path=/; Secure; SameSite=Lax`);
+      return new Response(null, { status: 303, headers: h });
     }
     return page(true);
+  }
+
+  // Abmelden (wird von der Seite aufgerufen, wenn ein neuer Tab/Browserstart erkannt wird)
+  if (url.pathname === '/__logout') {
+    const h = new Headers({ location: '/', 'cache-control': 'no-store' });
+    h.append('set-cookie', `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+    h.append('set-cookie', `qs_gate=; Path=/; Max-Age=0; Secure; SameSite=Lax`);
+    return new Response(null, { status: 303, headers: h });
   }
 
   // Bereits angemeldet?
