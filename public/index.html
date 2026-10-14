@@ -104,9 +104,9 @@
   .conn-status.bad .dot{ background:var(--rust); }
   .report-meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .report-meta .full{ grid-column:1 / -1; }
-  .report-meta.auto{ grid-template-columns:repeat(5,1fr); align-items:end; }
-  .report-meta.auto.cols4{ grid-template-columns:repeat(4,1fr); }
-  @media (max-width:640px){ .report-meta.auto, .report-meta.auto.cols4{ grid-template-columns:1fr 1fr; } }
+  .report-meta.auto{ grid-template-columns:repeat(3,1fr); align-items:end; }
+  .report-meta.auto.cols2{ grid-template-columns:repeat(2,1fr); }
+  @media (max-width:640px){ .report-meta.auto, .report-meta.auto.cols2{ grid-template-columns:1fr 1fr; } }
   .report-meta.auto .wetter-btn{ white-space:nowrap; }
   .report-meta.auto label{ display:flex; align-items:center; gap:8px; min-height:24px; margin-bottom:0; }
   .sub-h{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); margin:22px 0 8px; padding-top:14px; border-top:1px solid var(--concrete-2); }
@@ -298,6 +298,7 @@
   }
   .doku-head-row h3.section{ margin:0; }
   .doku-head-row .wetter-band{ margin:0; gap:22.7px; }
+  .begehung-head{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--charcoal); background:var(--concrete); padding:7px 10px; margin:18px 0 0; border-radius:var(--radius); }
 
   /* ---- Abschnittstitel ---- */
   h3.section{
@@ -469,8 +470,6 @@
           <input type="number" id="rBerichtsNr" placeholder="z. B. 1" min="1">
         </div>
         <div><label>Verfasser (Kürzel)</label><input type="text" id="rVerfasser" placeholder="z. B. NFM"></div>
-        <div><label>Temperatur Min.</label><input type="text" id="rTempMin" placeholder="z. B. 16,0°C"></div>
-        <div><label>Temperatur Max.</label><input type="text" id="rTempMax" placeholder="z. B. 22,0°C"></div>
         <input type="text" id="rDateiname" style="display:none" aria-hidden="true">
       </div>
 
@@ -592,7 +591,7 @@ function setBerichtsModus(modus){
     : 'Vollständiger QS-Bericht mit Verteiler, Rahmenterminen, Verlauf und Inhaltsverzeichnis.';
   document.querySelectorAll('.qs-only').forEach(el => { el.style.display = berichtsModus === 'kurz' ? 'none' : ''; });
   const metaGrid = document.querySelector('.report-meta.auto');
-  if(metaGrid) metaGrid.classList.toggle('cols4', berichtsModus === 'kurz');
+  if(metaGrid) metaGrid.classList.toggle('cols2', berichtsModus === 'kurz');
   const teilnehmerBlock = document.getElementById('teilnehmerBlock');
   if(teilnehmerBlock) teilnehmerBlock.style.display = berichtsModus === 'kurz' ? '' : 'none';
   // Kurzbericht ist kein durchnummerierter Bericht in einer Reihe, sondern
@@ -684,7 +683,7 @@ async function idbClearEntries(){
 // --- Berichtskopf (Deckblatt-Felder + Rahmentermine) genauso zwischenspeichern
 // wie die Feststellungen, damit ein Neuladen/Schließen des Tablets auch diese
 // Angaben nicht verwirft.
-const BERICHTSKOPF_FIELD_IDS = ['rProjekt','rBaustelle','rKunde','rKundeStrasse','rKundePlz','rVerfasser','rDatum','rBerichtsNr','rTempMin','rTempMax','rVerteiler','rRahmen','rRahmenHinweis','rTeilnehmer'];
+const BERICHTSKOPF_FIELD_IDS = ['rProjekt','rBaustelle','rKunde','rKundeStrasse','rKundePlz','rVerfasser','rDatum','rBerichtsNr','rVerteiler','rRahmen','rRahmenHinweis','rTeilnehmer'];
 
 async function idbPutMeta(key, value){
   try{
@@ -937,8 +936,6 @@ function buildBerichtskopfPayload(){
     verfasser: document.getElementById('rVerfasser').value,
     datum: document.getElementById('rDatum').value,
     berichtsNr: document.getElementById('rBerichtsNr').value,
-    tempMin: document.getElementById('rTempMin').value,
-    tempMax: document.getElementById('rTempMax').value,
     verteiler: document.getElementById('rVerteiler').value,
     rahmentermine: document.getElementById('rRahmen').value,
     rahmenHinweis: document.getElementById('rRahmenHinweis').value,
@@ -1796,7 +1793,7 @@ function toggleEditorFilter(){
 }
 
 function renderEditor(){
-  const doku = allEntries.filter(e=>e.type==='doku').slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  const doku = sortDokuByBegehung(allEntries.filter(e=>e.type==='doku'), berichtsModus !== 'kurz');
   const veranl = allEntries.filter(e=>e.type==='veranlassung').slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
 
   const dokuDone = doku.filter(e=>e.bearbeitet).length;
@@ -1806,10 +1803,17 @@ function renderEditor(){
   if(dokuHeading) dokuHeading.innerHTML = 'Dokumentation ' + (doku.length ? `<span class="edit-count">(${dokuDone} von ${doku.length} bearbeitet)</span>` : '');
   if(veranlHeading) veranlHeading.innerHTML = 'Veranlassungen ' + (veranl.length ? `<span class="edit-count">(${veranlDone} von ${veranl.length} bearbeitet)</span>` : '');
 
-  const build = (fullList) => {
+  const build = (fullList, groupByDate) => {
     const list = editorShowOnlyOpen ? fullList.filter(e=>!e.bearbeitet || dirtyEntries.has(e.id)) : fullList;
     if(!list.length) return `<div class="empty">${editorShowOnlyOpen ? 'Keine offenen Einträge mehr' : 'Keine Einträge'}</div>`;
-    return list.map((e, idx) => `
+    let lastKey = null;
+    return list.map((e, idx) => {
+      let sep = '';
+      if(groupByDate){
+        const k = dokuDateKey(e);
+        if(k !== lastKey){ lastKey = k; sep = `<div class="begehung-head">Begehung ${/^\d{4}-\d{2}-\d{2}$/.test(k) ? isoToDe(k) : escapeHtml(k || 'ohne Datum')}</div>`; }
+      }
+      return sep + `
     <div class="edit-row" data-id="${e.id}" draggable="true"
       ondragstart="handleDragStart(event,'${e.id}')" ondragend="handleDragEnd(event)"
       ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'${e.id}')">
@@ -1835,11 +1839,12 @@ function renderEditor(){
         </div>
       </div>
     </div>
-  `).join('');
+  `;
+    }).join('');
   };
   const dokuContainer = document.getElementById('editorDoku');
   const veranlContainer = document.getElementById('editorVeranl');
-  dokuContainer.innerHTML = build(doku);
+  dokuContainer.innerHTML = build(doku, berichtsModus !== 'kurz');
   veranlContainer.innerHTML = build(veranl);
   reapplyDirtyDrafts();
 }
@@ -1939,6 +1944,36 @@ function handleDrop(e, targetId){
   refreshReportViews();
 }
 
+// ---- Baustellenbegehungen: Feststellungen nach Datum gruppieren ----
+function isoToDe(iso){ return iso ? `${iso.slice(8,10)}.${iso.slice(5,7)}.${iso.slice(0,4)}` : ''; }
+function dokuDateKey(e){
+  const iso = parseGermanDateToISO(e.datum);
+  return iso || (e.datum || '').trim();
+}
+// byDate=true: erst nach Datum, dann nach manueller Reihenfolge (sortOrder)
+function sortDokuByBegehung(list, byDate){
+  return list.slice().sort((a,b) => {
+    if(byDate){
+      const ka = dokuDateKey(a), kb = dokuDateKey(b);
+      if(ka !== kb) return ka < kb ? -1 : 1;
+    }
+    return (a.sortOrder||0) - (b.sortOrder||0);
+  });
+}
+function dokuBegehungen(sortedDoku){
+  const groups = [];
+  sortedDoku.forEach(e => {
+    const key = dokuDateKey(e);
+    let g = groups[groups.length-1];
+    if(!g || g.key !== key){
+      g = { key, label: /^\d{4}-\d{2}-\d{2}$/.test(key) ? isoToDe(key) : (key || '—'), entries: [] };
+      groups.push(g);
+    }
+    g.entries.push(e);
+  });
+  return groups;
+}
+
 function fmtTemp(raw){
   raw = (raw||'').trim();
   if(!raw) return '';
@@ -2020,8 +2055,6 @@ function renderReport(){
   const kundeHtml = (kundeLines.length ? kundeLines : ['—']).map(escapeHtml).join('<br>');
   const verfasser = document.getElementById('rVerfasser').value || '—';
   const datum = document.getElementById('rDatum').value || '—';
-  const tempMin = fmtTemp(document.getElementById('rTempMin').value);
-  const tempMax = fmtTemp(document.getElementById('rTempMax').value);
   const berichtsNr = document.getElementById('rBerichtsNr').value.trim() || '1';
   const berichtsNrPadded = berichtsNr.padStart(3,'0');
   const isoToday = new Date().toISOString().slice(2,10).replace(/-/g,'');
@@ -2039,7 +2072,7 @@ function renderReport(){
   const verteilerRows = parseSemicolonRows(document.getElementById('rVerteiler').value);
   const rahmenRows = parseSemicolonRows(document.getElementById('rRahmen').value);
 
-  const doku = allEntries.filter(e=>e.type==='doku').slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  const doku = sortDokuByBegehung(allEntries.filter(e=>e.type==='doku'), berichtsModus !== 'kurz');
   const veranl = allEntries.filter(e=>e.type==='veranlassung').slice().sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
 
   const pages = [];
@@ -2049,17 +2082,18 @@ function renderReport(){
   // Wetterband-Inhalt einmal gebaut - erscheint je nach Berichtsart entweder
   // oben auf der Rahmentermine-Seite (QS-Bericht) oder neben der Überschrift
   // "Dokumentation" auf der ersten Dokumentationsseite (Kurzbericht).
-  const wetterBandHtml = `<div class="wetter-band"><span class="tag">${weekdayAbbrevDe(datum) ? weekdayAbbrevDe(datum) + ', ' : ''}${escapeHtml(datum)}</span><span>Min. ${escapeHtml(tempMin || '—')}</span><span>Max. ${escapeHtml(tempMax || '—')}</span></div>`;
+  const bandHtml = (dateStr, fortsetzung) => `<div class="wetter-band"><span class="tag">${weekdayAbbrevDe(dateStr) ? weekdayAbbrevDe(dateStr) + ', ' : ''}${escapeHtml(dateStr)}</span>${fortsetzung ? '<span>Fortsetzung</span>' : ''}</div>`;
+  const wetterBandHtml = bandHtml(datum, false);
 
   if(!kurz){
-    let rahmenBody = wetterBandHtml;
+    let rahmenBody = '';
     const rahmenHinweis = document.getElementById('rRahmenHinweis').value.trim();
     // TP-Datum fuer den zusammengefassten Tabellenkopf aus dem Hinweistext
     // ableiten (bestehendes Feld, keine neue Datenquelle) - Konvention: der
     // Hinweistext beginnt mit "TP vom TT.MM.JJJJ ...".
     const tpDateMatch = /TP\s+vom\s+(\d{1,2}\.\d{1,2}\.\d{2,4})/i.exec(rahmenHinweis);
     const tpHeader = tpDateMatch ? `TP vom ${tpDateMatch[1]}` : 'TP';
-    rahmenBody += `<h3 class="section">Rahmentermine</h3>
+    rahmenBody += `<div class="doku-head-row"><h3 class="section">Rahmentermine</h3></div>
       ${rahmenHinweis ? `<div class="section-note">${escapeHtml(rahmenHinweis)}</div>` : ''}
       <table class="rahmen-table">
         <colgroup><col class="c-haus"><col class="c-gewerk"><col class="c-tpvon"><col class="c-tpbis"><col class="c-stand"><col class="c-proz"><col class="c-ampel"><col class="c-prognose"></colgroup>
@@ -2098,28 +2132,40 @@ function renderReport(){
   // in die Kopfzeile der ersten Dokumentationsseite (eine Zeile mit dem
   // Abschnittstitel, damit der Tabellenkopf auf allen Seiten gleich hoch
   // beginnt wie im QS-Bericht).
-  const kurzHeadRow = `<div class="doku-head-row"><h3 class="section">Dokumentation</h3>${wetterBandHtml}</div>`;
-  const dokuHead = kurz ? kurzHeadRow : `<h3 class="section">Dokumentation</h3>`;
+  const kurzHeadRow = `<div class="doku-head-row"><h3 class="section">Dokumentation</h3></div>`;
 
   const startNr = getStartNr();
-  const dokuGroups = chunk3(doku);
+  const dokuRowsHtml = (group, firstIdx) => {
+    let t = `<table class="doku-entries"><colgroup><col class="c-nr"><col class="c-txt"><col class="c-foto"></colgroup><tr><th>Nr.</th><th>Feststellung</th><th>Foto</th></tr>`;
+    group.forEach((e, j) => { t += entryRow(startNr + firstIdx + j, e, false); });
+    return t + `</table>`;
+  };
   if(doku.length === 0){
     toc.push({ title: 'Dokumentation', page: pageCounter });
-    pages.push({ subtitle, body: dokuHead + `<div class="empty">Keine Dokumentations-Einträge vorhanden.</div>` });
+    pages.push({ subtitle, body: `<h3 class="section">Dokumentation</h3>` + `<div class="empty">Keine Dokumentations-Einträge vorhanden.</div>` });
     pageCounter++;
-  } else {
-    dokuGroups.forEach((group, gi) => {
-      let body = gi === 0 ? dokuHead : '';
+  } else if(kurz){
+    chunk3(doku).forEach((group, gi) => {
+      let body = gi === 0 ? kurzHeadRow : '';
       const tblStyle = gi === 0 ? '' : ' style="margin-top:58.9px"';
-      body += `<table class="doku-entries"${tblStyle}><colgroup><col class="c-nr"><col class="c-txt"><col class="c-foto"></colgroup><tr><th>Nr.</th><th>Feststellung</th><th>Foto</th></tr>`;
-      group.forEach((e, j) => {
-        const idx = gi*3 + j;
-        body += entryRow(startNr + idx, e, false);
-      });
-      body += `</table>`;
+      body += dokuRowsHtml(group, gi*3).replace('<table class="doku-entries">', `<table class="doku-entries"${tblStyle}>`);
       if(gi === 0) toc.push({ title: 'Dokumentation', page: pageCounter });
       pages.push({ subtitle, body });
       pageCounter++;
+    });
+  } else {
+    // QS-Bericht: je Baustellenbegehung (= Datum der Feststellung) beginnt eine
+    // neue Seite mit Datumsband; jede Seite behält dieselbe Kopfzeile
+    // (Titel links, Band rechts), damit das Seitenlayout überall gleich bleibt.
+    let idx = 0, firstPage = true;
+    dokuBegehungen(doku).forEach(bg => {
+      chunk3(bg.entries).forEach((group, gi) => {
+        const head = `<div class="doku-head-row"><h3 class="section">Dokumentation</h3></div>`;
+        pages.push({ subtitle, body: head + dokuRowsHtml(group, idx) });
+        if(firstPage){ toc.push({ title: 'Dokumentation', page: pageCounter }); firstPage = false; }
+        idx += group.length;
+        pageCounter++;
+      });
     });
   }
 
