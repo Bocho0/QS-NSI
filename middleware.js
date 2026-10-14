@@ -1,6 +1,6 @@
 // Passwortschutz mit eigener Anmeldeseite (läuft serverseitig bei Vercel, kostenlos).
 // Umgebungsvariablen in Vercel:
-//   APP_PASSWORD  (Pflicht)  Passwort
+//   NSI_BERICHTSERSTELLUNG  (Pflicht)  Passwort (alternativ: APP_PASSWORD)
 //   APP_USER      (optional) Benutzername; ohne Angabe wird jeder Name akzeptiert
 // Die Anmeldung gilt, bis der Browser geschlossen wird (Sitzungs-Cookie).
 import { next } from '@vercel/edge';
@@ -70,8 +70,8 @@ function page(error) {
 }
 
 export default async function middleware(request) {
-  const pw = process.env.APP_PASSWORD;
-  if (!pw) return new Response('APP_PASSWORD ist in Vercel nicht gesetzt.', { status: 503 });
+  const pw = process.env.NSI_BERICHTSERSTELLUNG || process.env.APP_PASSWORD;
+  if (!pw) return new Response('Passwort-Variable (NSI_BERICHTSERSTELLUNG) ist in Vercel nicht gesetzt.', { status: 503 });
   const wantUser = process.env.APP_USER || '';
   const url = new URL(request.url);
 
