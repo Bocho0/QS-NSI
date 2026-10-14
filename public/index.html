@@ -834,25 +834,15 @@ function guessKuerzel(){
 // Verlassen eines Feldes gespeichert), damit er auch dann stimmt, wenn sich
 // Datum/Projekt/Nr. zwischenzeitlich geändert haben.
 function autoDateinameFromInputs(){
-  const kuerzel = guessKuerzel();
-  if(!kuerzel) return '';
-  const kuerzelClean = kuerzel.replace(/[^A-Za-z0-9äöüÄÖÜß-]+/g,'');
-  if(berichtsModus === 'kurz'){
-    // Kurzbericht: Berichtsnummer entfaellt, stattdessen dasselbe Datum wie
-    // "Datum Bericht" oben - "JJMMTT_Kurzbericht-Baustellenbegehung-Kürzel",
-    // z. B. "260910_Kurzbericht-Baustellenbegehung-CHA".
-    const iso = parseGermanDateToISO(document.getElementById('rDatum').value);
-    if(!iso) return '';
-    const jj = iso.slice(2,4), mm = iso.slice(5,7), tt = iso.slice(8,10);
-    return `${jj}${mm}${tt}_Kurzbericht-Baustellenbegehung-${kuerzelClean}`;
-  }
+  const kuerzelClean = (guessKuerzel() || '').replace(/[^A-Za-z0-9äöüÄÖÜß-]+/g,'');
   const iso = parseGermanDateToISO(document.getElementById('rDatum').value);
-  const nr = document.getElementById('rBerichtsNr').value.trim();
   if(!iso) return '';
-  const jj = iso.slice(2,4), mm = iso.slice(5,7), tt = iso.slice(8,10);
-  return nr
-    ? `${jj}${mm}${tt}_QS-Bericht-${nr}-${kuerzelClean}`
-    : `${jj}${mm}${tt}_QS-Bericht-${kuerzelClean}`;
+  const ymd = iso.slice(2,4) + iso.slice(5,7) + iso.slice(8,10);
+  const suffix = kuerzelClean ? '-' + kuerzelClean : '';
+  if(berichtsModus === 'kurz') return `${ymd}_Kurzbericht-Baustellenbegehung${suffix}`;
+  const nrRaw = document.getElementById('rBerichtsNr').value.trim();
+  const nr = /^\d+$/.test(nrRaw) ? String(parseInt(nrRaw,10)) : nrRaw.replace(/[^A-Za-z0-9äöüÄÖÜß-]+/g,'');
+  return `${ymd}_QS-Bericht${nr ? '-' + nr : ''}${suffix}`;
 }
 
 updateHeaderProj();
@@ -2074,18 +2064,7 @@ function renderReport(){
   const verfasser = document.getElementById('rVerfasser').value || '—';
   const datum = document.getElementById('rDatum').value || '—';
   const berichtsNr = document.getElementById('rBerichtsNr').value.trim() || '1';
-  const berichtsNrPadded = berichtsNr.padStart(3,'0');
-  const isoToday = new Date().toISOString().slice(2,10).replace(/-/g,'');
-  // Kurzbericht: Dokumentbenennung ohne Berichtsnummer, stattdessen das Datum
-  // des Berichts (gleiches Feld wie "Datum Bericht" oben) - Format wie im
-  // Beispiel: "JJMMTT_Kurzbericht-Baustellenbegehung-Kürzel".
-  const berichtDatumIso = kurz ? parseGermanDateToISO(document.getElementById('rDatum').value) : null;
-  const kurzDateJJMMTT = berichtDatumIso ? berichtDatumIso.slice(2,4) + berichtDatumIso.slice(5,7) + berichtDatumIso.slice(8,10) : isoToday;
-  const kuerzelClean = (guessKuerzel() || escapeHtml(verfasser)).replace(/[^A-Za-z0-9äöüÄÖÜß-]+/g,'');
-  const autoDateiname = kurz
-    ? `${kurzDateJJMMTT}_Kurzbericht-Baustellenbegehung-${kuerzelClean}`
-    : isoToday + '_' + escapeHtml(verfasser) + '-QS-Bautenstand_' + berichtsNrPadded;
-  const dateiname = (document.getElementById('rDateiname').value.trim() || autoDateiname).replace(/\.docx$/i, '');
+  const dateiname = (document.getElementById('rDateiname').value.trim() || autoDateinameFromInputs() || (kurz ? 'Kurzbericht' : 'QS-Bericht')).replace(/\.(docx|pdf)$/i, '');
 
   const verteilerRows = parseSemicolonRows(document.getElementById('rVerteiler').value);
   const rahmenRows = parseSemicolonRows(document.getElementById('rRahmen').value);
